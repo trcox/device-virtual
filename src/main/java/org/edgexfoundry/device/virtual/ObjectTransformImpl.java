@@ -21,17 +21,24 @@ package org.edgexfoundry.device.virtual;
 
 import java.math.BigInteger;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import org.edgexfoundry.device.virtual.data.ObjectStore;
 import org.edgexfoundry.domain.meta.PropertyValue;
+import org.edgexfoundry.service.transform.ObjectTransform;
 
 @Service
-public class ObjectTransform {
+public class ObjectTransformImpl implements ObjectTransform {
+	
+  private boolean transformData;
 
-	@Autowired
-	ObjectStore objectCache;
+  @Override
+  public boolean getTransformData() {
+    return this.transformData;
+  }
+
+  @Override
+  public void setTransformData(boolean transformData) {
+    this.transformData = transformData;
+  }
 	
 	// Read current value, then mask and or with the desired set
 	public String maskedValue(PropertyValue value, String val, String result) {
@@ -72,7 +79,7 @@ public class ObjectTransform {
 				val = val.subtract(complement);
 			}
 			
-			if (!objectCache.getTransformData()) {
+			if (!this.getTransformData()) {
 				int intValue = val.intValue();
 				return String.valueOf(intValue);
 			}

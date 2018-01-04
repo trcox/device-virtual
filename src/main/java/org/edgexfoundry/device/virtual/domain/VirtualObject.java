@@ -19,22 +19,17 @@
  *******************************************************************************/
 package org.edgexfoundry.device.virtual.domain;
 
+import org.edgexfoundry.device.domain.ServiceObject;
 import org.edgexfoundry.device.virtual.domain.VirtualAttribute;
 import org.edgexfoundry.domain.meta.DeviceObject;
 
-public class VirtualObject extends DeviceObject {
+@SuppressWarnings("serial")
+public class VirtualObject extends ServiceObject {
 
 	private VirtualAttribute attributes;
-	
-	public VirtualObject() {
-		
-	}
 
 	public VirtualObject(DeviceObject object) {
-		this.setName(object.getName());
-		this.setTag(object.getTag());
-		this.setDescription(object.getDescription());
-		this.setProperties(object.getProperties());
+		super(object);
 		this.setAttributes(new VirtualAttribute(object.getAttributes()));
 	}
 	

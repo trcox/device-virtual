@@ -25,7 +25,7 @@ import com.google.gson.Gson;
 
 public class VirtualAttribute {
 	
-	private final static EdgeXLogger logger = EdgeXLoggerFactory.getEdgeXLogger(VirtualAttribute.class);
+	private final EdgeXLogger logger = EdgeXLoggerFactory.getEdgeXLogger(this.getClass());
 	
 	// Replace these attributes with the Virtual
 	// specific metadata needed by the Virtual Driver

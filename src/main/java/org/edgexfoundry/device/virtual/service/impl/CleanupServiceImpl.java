@@ -37,28 +37,29 @@ import org.edgexfoundry.controller.EventClient;
 import org.edgexfoundry.controller.ScheduleClient;
 import org.edgexfoundry.controller.ScheduleEventClient;
 import org.edgexfoundry.controller.ValueDescriptorClient;
-import org.edgexfoundry.device.virtual.config.DeviceServiceProperties;
-import org.edgexfoundry.device.virtual.controller.UpdateController;
-import org.edgexfoundry.device.virtual.data.DeviceStore;
-import org.edgexfoundry.device.virtual.data.ProfileStore;
-import org.edgexfoundry.device.virtual.scheduling.Scheduler;
+import org.edgexfoundry.device.controller.UpdateController;
+import org.edgexfoundry.device.scheduling.Scheduler;
+import org.edgexfoundry.device.store.impl.DeviceStoreImpl;
+import org.edgexfoundry.device.store.impl.ProfileStoreImpl;
+import org.edgexfoundry.device.virtual.Initializer;
 import org.edgexfoundry.device.virtual.service.CleanupService;
 import org.edgexfoundry.domain.common.ValueDescriptor;
 import org.edgexfoundry.domain.meta.Device;
 import org.edgexfoundry.domain.meta.ScheduleEvent;
+import org.edgexfoundry.support.logging.client.EdgeXLogger;
+import org.edgexfoundry.support.logging.client.EdgeXLoggerFactory;
 
 @Service
 public class CleanupServiceImpl implements CleanupService {
 
 	// private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	// replace above logger with EdgeXLogger below
-	private final org.edgexfoundry.support.logging.client.EdgeXLogger logger = org.edgexfoundry.support.logging.client.EdgeXLoggerFactory
-			.getEdgeXLogger(this.getClass());
+	private final EdgeXLogger logger = EdgeXLoggerFactory.getEdgeXLogger(this.getClass());
 
 	public static boolean IS_CLEANING = false;
 
 	@Autowired
-	private DeviceServiceProperties deviceServiceProps;
+	private Initializer deviceServiceProps;
 
 	@Autowired
 	private DeviceServiceClient deviceServiceClient;
@@ -91,10 +92,10 @@ public class CleanupServiceImpl implements CleanupService {
 	private Scheduler scheduler;
 
 	@Autowired
-	private DeviceStore deviceStore;
+	private DeviceStoreImpl deviceStore;
 
 	@Autowired
-	private ProfileStore profileStore;
+	private ProfileStoreImpl profileStore;
 
 	@Override
 	public void doCleanup() {
@@ -158,8 +159,8 @@ public class CleanupServiceImpl implements CleanupService {
 	}
 
 	private void removeDeviceService() {
-		deviceServiceClient.delete(deviceServiceProps.getDeviceService().getId());
-		addressableClient.delete(deviceServiceProps.getDeviceService().getAddressable().getId());
+		deviceServiceClient.delete(deviceServiceProps.getService().getId());
+		addressableClient.delete(deviceServiceProps.getService().getAddressable().getId());
 
 		logger.debug("the DeviceService record has been deleted");
 	}

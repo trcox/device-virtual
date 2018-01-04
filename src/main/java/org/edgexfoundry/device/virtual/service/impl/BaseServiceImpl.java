@@ -17,19 +17,21 @@
  * @author: Tyler Cox, Dell
  * @version: 1.0.0
  *******************************************************************************/
-package org.edgexfoundry.device.virtual;
+package org.edgexfoundry.device.virtual.service.impl;
 
 import javax.annotation.PostConstruct;
 import javax.ws.rs.NotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.scheduling.annotation.Async;
 
 import org.edgexfoundry.controller.AddressableClient;
 import org.edgexfoundry.controller.DeviceServiceClient;
-import org.edgexfoundry.device.virtual.config.DeviceServiceProperties;
+import org.edgexfoundry.device.domain.configuration.BaseService;
+import org.edgexfoundry.device.virtual.Application;
 import org.edgexfoundry.domain.meta.Addressable;
 import org.edgexfoundry.domain.meta.AdminState;
 import org.edgexfoundry.domain.meta.DeviceService;
@@ -39,49 +41,33 @@ import org.edgexfoundry.support.logging.client.EdgeXLogger;
 import org.edgexfoundry.support.logging.client.EdgeXLoggerFactory;
 
 @ImportResource("spring-config.xml")
-public class BaseService {
+@ConfigurationProperties(prefix = "service")
+@EnableConfigurationProperties
+public class BaseServiceImpl implements BaseService {
 	
-	private final static EdgeXLogger logger = EdgeXLoggerFactory.getEdgeXLogger(BaseService.class);
+	private final EdgeXLogger logger = EdgeXLoggerFactory.getEdgeXLogger(this.getClass());
 	
-	// service name
-	@Value("${service.name}")
-	private String serviceName;
-
-	// service Address Info
-	@Value("${service.host}")
+	private String name;
 	private String host;
-
-	@Value("${server.port}")
 	private int port;
-
-	// service labels
-	@Value("${service.labels}")
 	private String[] labels;
-
-	// service callback root
-	@Value("${service.callback}")
-	private String callbackUrl;
+	private String callback = "/api/v1/callback";
+	private Protocol protocol = Protocol.HTTP;
+	private AdminState adminState = AdminState.UNLOCKED;
+  private OperatingState operatingState = OperatingState.ENABLED;
+  private int connectRetries = 12;
+  private long connectInterval = 10000;
 
 	// TODO: This should become a service domain object , not a device service domain object
 	private DeviceService service;
 
-	// TODO: This should become a BaseServiceClient
+	// TODO: This should become a BaseServiceImplClient
 	@Autowired
 	private DeviceServiceClient deviceServiceClient;
 
 	@Autowired
 	private AddressableClient addressableClient;
 	
-	// service initialization 
-	@Value("${service.connect.retries}")
-	private int initRetries;
-
-	@Value("${service.connect.interval}")
-	private long initInterval;
-	
-	@Autowired
-	private DeviceServiceProperties deviceServiceProperties;
-
 	// track initialization attempts
 	private int initAttempts;
 
@@ -90,8 +76,10 @@ public class BaseService {
 
 	// track registration success
 	private boolean registered;
+
+  private Addressable addressable;
 	
-	public BaseService() {
+	public BaseServiceImpl() {
 		setInitAttempts(0);
 		setInitialized(false);
 	}
@@ -104,20 +92,20 @@ public class BaseService {
 		this.initAttempts = initAttempts;
 	}
 
-	public int getInitRetries() {
-		return initRetries;
+	public int getConnectRetries() {
+		return connectRetries;
 	}
 
-	public void setInitRetries(int initRetries) {
-		this.initRetries = initRetries;
+	public void setConnectRetries(int connectRetries) {
+		this.connectRetries = connectRetries;
 	}
 
-	public long getInitInterval() {
-		return initInterval;
+	public long getConnectInterval() {
+		return connectInterval;
 	}
 
-	public void setInitInterval(long initInterval) {
-		this.initInterval = initInterval;
+	public void setConnectInterval(long connectInterval) {
+		this.connectInterval = connectInterval;
 	}
 
 	public boolean isInitialized() {
@@ -168,10 +156,10 @@ public class BaseService {
 			logger.info("initialization successful.");
 		} else {
 			// otherwise see if we need to keep going
-			if((getInitRetries() == 0) || (getInitAttempts() < getInitRetries())) {
-				logger.debug("initialization unsuccessful. sleeping " + getInitInterval());
+			if((getConnectRetries() == 0) || (getInitAttempts() < getConnectRetries())) {
+				logger.debug("initialization unsuccessful. sleeping " + getConnectInterval());
 				try {
-					Thread.sleep(getInitInterval());
+					Thread.sleep(getConnectInterval());
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 				}
@@ -181,7 +169,6 @@ public class BaseService {
 			} else {
 				// here, we've failed and run out of retries, so just be done.
 				logger.info("initialization unsuccessful after " + getInitAttempts() + " attempts.  Giving up.");
-				// TODO: what do we do here? exit?
 				Application.exit(-1);
 			}
 		} 
@@ -211,37 +198,38 @@ public class BaseService {
 		this.labels = labels;
 	}
 
-	public String getCallbackUrl() {
-		return callbackUrl;
+	public String getCallback() {
+		return callback;
 	}
 
-	public void setCallbackUrl(String callbackUrl) {
-		this.callbackUrl = callbackUrl;
+	public void setCallback(String callback) {
+		this.callback = callback;
 	}
 
-	public String getServiceName() {
-		return serviceName;
+	public String getName() {
+		return name;
 	}
 
-	public void setServiceName(String serviceName) {
-		this.serviceName = serviceName;
+	public void setName(String serviceName) {
+		this.name = serviceName;
 	}
 
 	public DeviceService getService() {
 		if(service == null) {
 			try {
-				service = deviceServiceClient.deviceServiceForName(serviceName);
+				service = deviceServiceClient.deviceServiceForName(name);
 				setService(service);
-				logger.info("service " + serviceName + " has service id " + service.getId());
+				logger.info("service " + name + " has service id " + service.getId());
 			} catch (NotFoundException n) {
 				try {
 					setService();
 				} catch (NotFoundException e) {
-					logger.info("failed to create service " + serviceName + " in metadata: " + e.getMessage());
+					logger.info("failed to create service " + name + " in metadata: " + e.getMessage());
 					service = null;
 				}
 			} catch (Exception e) {
 				logger.error("unable to establish connection to metadata " + e.getCause() + " " + e.getMessage());
+				e.printStackTrace();
 				service = null;
 			}
 		}
@@ -249,18 +237,18 @@ public class BaseService {
 	}
 
 	private void setService() {
-		logger.info("creating service " + serviceName + " in metadata");
+		logger.info("creating service " + name + " in metadata");
 		service = new DeviceService();
 		
 		// Check for an addressable
 		Addressable addressable = null;
 		try {
-			addressable = addressableClient.addressableForName(serviceName);
+			addressable = addressableClient.addressableForName(name);
 		} catch (NotFoundException e) {
 			// ignore this and create a new addressable
 		}
 		if(addressable == null) {
-			addressable = new Addressable(serviceName, Protocol.HTTP, host, callbackUrl, port);
+			addressable = new Addressable(name, protocol, host, callback, port);
 			addressable.setOrigin(System.currentTimeMillis());
 			try {
 				String id = addressableClient.add(addressable);
@@ -275,14 +263,13 @@ public class BaseService {
 		// Setup the service
 		service.setAddressable(addressable);
 		service.setOrigin(System.currentTimeMillis());
-		service.setAdminState(AdminState.UNLOCKED);
-		service.setOperatingState(OperatingState.ENABLED);
+		service.setAdminState(adminState);
+		service.setOperatingState(operatingState);
 		service.setLabels(labels);
-		service.setName(serviceName);
+		service.setName(name);
 		try {
 			String id = deviceServiceClient.add(service);
 			service.setId(id);
-			deviceServiceProperties.setDeviceService(service);
 		} catch (NotFoundException e) {
 			logger.error("Could not add device service to metadata: " + e.getMessage());
 			service = null;
@@ -291,15 +278,23 @@ public class BaseService {
 	
 	public void setService(DeviceService srv) {
 		service = srv;
-		setHost(srv.getAddressable().getAddress());
-		setPort(srv.getAddressable().getPort());
-		setCallbackUrl(srv.getAddressable().getPath());
-		setServiceName(srv.getName());
+		setName(srv.getName());
 		setLabels(srv.getLabels());
-		deviceServiceProperties.setDeviceService(srv);
+		setAddressable(srv.getAddressable());
+	}
+	
+	public Addressable getAddressable() {
+	  return addressable;
 	}
 
-	public boolean isServiceLocked(){
+	public void setAddressable(Addressable addressable) {
+    this.addressable = addressable;
+	  setHost(addressable.getAddress());
+    setPort(addressable.getPort());
+    setCallback(addressable.getPath());
+  }
+
+  public boolean isServiceLocked(){
 		DeviceService srv = getService();
 		if (srv == null) {
 		  return true;

@@ -31,8 +31,8 @@ import org.springframework.stereotype.Service;
 
 import org.edgexfoundry.controller.AddressableClient;
 import org.edgexfoundry.controller.DeviceClient;
-import org.edgexfoundry.device.virtual.config.DeviceServiceProperties;
-import org.edgexfoundry.device.virtual.data.DeviceStore;
+import org.edgexfoundry.device.store.impl.DeviceStoreImpl;
+import org.edgexfoundry.device.virtual.Initializer;
 import org.edgexfoundry.device.virtual.service.DeviceAutoCreateService;
 import org.edgexfoundry.device.virtual.service.ProvisionService;
 import org.edgexfoundry.domain.meta.Addressable;
@@ -42,17 +42,18 @@ import org.edgexfoundry.domain.meta.DeviceProfile;
 import org.edgexfoundry.domain.meta.DeviceService;
 import org.edgexfoundry.domain.meta.OperatingState;
 import org.edgexfoundry.domain.meta.Protocol;
+import org.edgexfoundry.support.logging.client.EdgeXLogger;
+import org.edgexfoundry.support.logging.client.EdgeXLoggerFactory;
 
 @Service
 public class DeviceAutoCreateServiceImpl implements DeviceAutoCreateService {
 
 	// private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	// replace above logger with EdgeXLogger below
-	private final org.edgexfoundry.support.logging.client.EdgeXLogger logger = org.edgexfoundry.support.logging.client.EdgeXLoggerFactory
-			.getEdgeXLogger(this.getClass());
+	private final EdgeXLogger logger = EdgeXLoggerFactory.getEdgeXLogger(this.getClass());
 
 	@Autowired
-	private DeviceServiceProperties deviceServiceProps;
+	private Initializer deviceServiceProps;
 
 	@Autowired
 	private DeviceClient deviceClient;
@@ -65,14 +66,14 @@ public class DeviceAutoCreateServiceImpl implements DeviceAutoCreateService {
 
 	@Autowired
 	@Lazy
-	private DeviceStore deviceStore;
+	private DeviceStoreImpl deviceStore;
 
 	private boolean isCompleted = false;
 
 	@Override
 	public void autoCreateOneDeviceForEachProfile() {
 
-		DeviceService deviceService = deviceServiceProps.getDeviceService();
+		DeviceService deviceService = deviceServiceProps.getService();
 		Collection<Device> existingDevices = deviceStore.getDevices().values();
 		Set<DeviceProfile> profiles = deviceStore.getDevices().values().stream()
 				.map(Device::getProfile).collect(Collectors.toSet());

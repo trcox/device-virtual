@@ -19,7 +19,6 @@
  *******************************************************************************/
 package org.edgexfoundry.device.virtual.service.impl;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,16 +27,15 @@ import java.util.stream.Collectors;
 import javax.ws.rs.ClientErrorException;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import org.edgexfoundry.controller.AddressableClient;
 import org.edgexfoundry.controller.ScheduleClient;
 import org.edgexfoundry.controller.ScheduleEventClient;
 import org.edgexfoundry.controller.ValueDescriptorClient;
+import org.edgexfoundry.device.store.DeviceStore;
+import org.edgexfoundry.device.virtual.Initializer;
 import org.edgexfoundry.device.virtual.config.ApplicationProperties;
-import org.edgexfoundry.device.virtual.config.DeviceServiceProperties;
-import org.edgexfoundry.device.virtual.data.DeviceStore;
 import org.edgexfoundry.device.virtual.data.VirtualResourceRepository;
 import org.edgexfoundry.device.virtual.domain.VirtualResource;
 import org.edgexfoundry.device.virtual.service.ReadValueGenerator;
@@ -53,14 +51,15 @@ import org.edgexfoundry.domain.meta.Response;
 import org.edgexfoundry.domain.meta.Schedule;
 import org.edgexfoundry.domain.meta.ScheduleEvent;
 import org.edgexfoundry.exception.controller.DataValidationException;
+import org.edgexfoundry.support.logging.client.EdgeXLogger;
+import org.edgexfoundry.support.logging.client.EdgeXLoggerFactory;
 
 @Service
 public class VirtualResourceManagerImpl implements VirtualResourceManager {
 
 	// private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	// replace above logger with EdgeXLogger below
-	private final org.edgexfoundry.support.logging.client.EdgeXLogger logger = org.edgexfoundry.support.logging.client.EdgeXLoggerFactory
-			.getEdgeXLogger(this.getClass());
+	private final EdgeXLogger logger = EdgeXLoggerFactory.getEdgeXLogger(this.getClass());
 
 	private static final String POSITIVE_CODE = "200";
 
@@ -88,17 +87,16 @@ public class VirtualResourceManagerImpl implements VirtualResourceManager {
 	private ValueDescriptorClient valueDescriptorClient;
 
 	@Autowired
-	private DeviceServiceProperties deviceServiceProperties;
+	private Initializer deviceServiceProperties;
 	
 	@Autowired
-	@Lazy
 	private DeviceStore deviceStore;
 
 	@Override
 	public void createDefaultRecordsForExistingDevices() {
-		Collection<Device> devices = deviceStore.getDevices().values();
-
-		for (Device device : devices) {
+	  Map<String, Device> devices = deviceStore.getDevices();
+	  
+		for (Device device : devices.values()) {
 			createDefaultRecords(device);
 		}
 	}
@@ -195,11 +193,11 @@ public class VirtualResourceManagerImpl implements VirtualResourceManager {
 	}
 
 	private void createSchedulerEvent(VirtualResource vr) {
-		Addressable serviceAddressable = deviceServiceProperties.getDeviceService().getAddressable();
+		Addressable serviceAddressable = deviceServiceProperties.getAddressable();
 		String name = "device-virtual-vr-" + String.valueOf(vr.getResourceId());
 		String schedule = "interval-for-vr-" + String.valueOf(vr.getResourceId());
 		String parameters = null;
-		String service = deviceServiceProperties.getDeviceService().getName();
+		String service = deviceServiceProperties.getName();
 		String path = "/api/v1/collector/" + String.valueOf(vr.getResourceId());
 
 		Addressable addressable = new Addressable("Schedule-" + name, serviceAddressable.getProtocol(),

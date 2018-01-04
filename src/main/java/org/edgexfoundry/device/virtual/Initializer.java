@@ -22,19 +22,23 @@ package org.edgexfoundry.device.virtual;
 import javax.annotation.PreDestroy;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
+import org.springframework.stereotype.Service;
 import org.edgexfoundry.device.virtual.config.ApplicationProperties;
-import org.edgexfoundry.device.virtual.data.DeviceStore;
-import org.edgexfoundry.device.virtual.scheduling.Scheduler;
+import org.edgexfoundry.device.virtual.handler.VirtualHandler;
+import org.edgexfoundry.device.scheduling.Scheduler;
+import org.edgexfoundry.device.store.DeviceStore;
 import org.edgexfoundry.device.virtual.service.CleanupService;
+import org.edgexfoundry.device.virtual.service.DeviceAutoCreateService;
+import org.edgexfoundry.device.virtual.service.ProvisionService;
+import org.edgexfoundry.device.virtual.service.VirtualResourceManager;
+import org.edgexfoundry.device.virtual.service.impl.BaseServiceImpl;
 import org.edgexfoundry.support.logging.client.EdgeXLogger;
 import org.edgexfoundry.support.logging.client.EdgeXLoggerFactory;
 
-@Component
-public class Initializer extends BaseService {
+@Service
+public class Initializer extends BaseServiceImpl {
 
-	private final static EdgeXLogger logger = EdgeXLoggerFactory.getEdgeXLogger(Initializer.class);
+	private final EdgeXLogger logger = EdgeXLoggerFactory.getEdgeXLogger(this.getClass());
 	
 	@Autowired
 	DeviceStore devices;
@@ -43,17 +47,38 @@ public class Initializer extends BaseService {
 	Scheduler schedules;
 	
 	@Autowired
+	VirtualHandler virtualHandler;
+	
+	@Autowired
 	private ApplicationProperties applicationProperties;
 	
 	@Autowired
 	private CleanupService cleanupService;
+	
+	@Autowired
+  private ProvisionService deviceProvisionService;
+
+  @Autowired
+  private DeviceAutoCreateService deviceAutoCreateService;
+
+  @Autowired
+  private VirtualResourceManager virtualResourceManager;
 
 	@Override
 	public boolean initialize(String deviceServiceId) {
+	  deviceProvisionService.doProvision();
+	  
 		// load the devices in cache.
-		devices.initialize(deviceServiceId);
-		schedules.initialize(getServiceName());
-		logger.info("Initialized device service successfully");
+		devices.initialize(deviceServiceId, virtualHandler);
+		schedules.initialize(getName());
+
+    if (applicationProperties.isAutoCreateDevice()) {
+      deviceAutoCreateService.autoCreateOneDeviceForEachProfile();
+    }
+    
+    virtualResourceManager.createDefaultRecordsForExistingDevices();
+    
+    logger.info("Initialized device service successfully");
 		return true;
 	}
 	

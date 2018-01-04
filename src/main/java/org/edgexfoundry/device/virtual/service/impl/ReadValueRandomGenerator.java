@@ -27,12 +27,13 @@ import org.springframework.stereotype.Service;
 import org.edgexfoundry.device.virtual.domain.VirtualResource;
 import org.edgexfoundry.device.virtual.service.ReadValueGenerator;
 import org.edgexfoundry.domain.common.IoTType;
+import org.edgexfoundry.support.logging.client.EdgeXLogger;
+import org.edgexfoundry.support.logging.client.EdgeXLoggerFactory;
 
 @Service
 public class ReadValueRandomGenerator implements ReadValueGenerator {
 
-	private final org.edgexfoundry.support.logging.client.EdgeXLogger logger = org.edgexfoundry.support.logging.client.EdgeXLoggerFactory
-			.getEdgeXLogger(this.getClass());
+	private final EdgeXLogger logger = EdgeXLoggerFactory.getEdgeXLogger(this.getClass());
 
 	private final static float MAX_FLOAT_VALUE = 100.00f;
 	private final static float MIN_FLOAT_VALUE = 0.00f;

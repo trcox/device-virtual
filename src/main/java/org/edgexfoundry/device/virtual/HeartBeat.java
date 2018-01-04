@@ -29,7 +29,7 @@ import org.edgexfoundry.support.logging.client.EdgeXLoggerFactory;
 public class HeartBeat {
 
 	
-	private final static EdgeXLogger logger = EdgeXLoggerFactory.getEdgeXLogger(HeartBeat.class);
+	private final EdgeXLogger logger = EdgeXLoggerFactory.getEdgeXLogger(this.getClass());
 
 	@Scheduled(fixedRateString = "${heart.beat.time}")
 	public void pulse() {

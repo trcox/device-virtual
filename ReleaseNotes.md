@@ -16,7 +16,7 @@ The Barcelona Release (v 0.2) of the Virtual Device micro service includes the f
 * Removed OS specific file path for logging file 
 
  - [#22](https://github.com/edgexfoundry/device-virtual/pull/22) - Remove staging plugin contributed by Jeremy Phelps ([JPWKU](https://github.com/JPWKU))
- - [#21](https://github.com/edgexfoundry/device-virtual/pull/21) - Adds null check in BaseService contributed by Tyler Cox ([trcox](https://github.com/trcox))
+ - [#21](https://github.com/edgexfoundry/device-virtual/pull/21) - Adds null check in BaseServiceImpl contributed by Tyler Cox ([trcox](https://github.com/trcox))
  - [#20](https://github.com/edgexfoundry/device-virtual/pull/20) - Fixes Maven artifact dependency path contributed by Tyler Cox ([trcox](https://github.com/trcox))
  - [#19](https://github.com/edgexfoundry/device-virtual/pull/19) - added staging and snapshots repos to pom along with nexus staging mav… contributed by Jim White ([jpwhitemn](https://github.com/jpwhitemn))
  - [#18](https://github.com/edgexfoundry/device-virtual/pull/18) - Added support for aarch64 arch contributed by ([feclare](https://github.com/feclare))

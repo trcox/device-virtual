@@ -25,15 +25,14 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-
-import org.edgexfoundry.device.virtual.data.DeviceStore;
-import org.edgexfoundry.device.virtual.data.ObjectStore;
-import org.edgexfoundry.device.virtual.data.ProfileStore;
-import org.edgexfoundry.device.virtual.domain.ScanList;
+import org.edgexfoundry.device.domain.ScanList;
+import org.edgexfoundry.device.domain.configuration.BaseService;
+import org.edgexfoundry.device.store.impl.DeviceStoreImpl;
+import org.edgexfoundry.device.store.impl.ObjectStoreImpl;
+import org.edgexfoundry.device.store.impl.ProfileStoreImpl;
 import org.edgexfoundry.device.virtual.domain.VirtualObject;
 import org.edgexfoundry.device.virtual.domain.VirtualResource;
 import org.edgexfoundry.device.virtual.handler.VirtualHandler;
-import org.edgexfoundry.device.virtual.service.ApplicationInitializer;
 import org.edgexfoundry.device.virtual.service.VirtualResourceManager;
 import org.edgexfoundry.domain.meta.Addressable;
 import org.edgexfoundry.domain.meta.Device;
@@ -45,23 +44,23 @@ import org.edgexfoundry.support.logging.client.EdgeXLoggerFactory;
 @Service
 public class VirtualDriver {
 
-	private final static EdgeXLogger logger = EdgeXLoggerFactory.getEdgeXLogger(VirtualDriver.class);
+	private final EdgeXLogger logger = EdgeXLoggerFactory.getEdgeXLogger(this.getClass());
 
 	@Autowired
-	ProfileStore profiles;
+	ProfileStoreImpl profiles;
 
 	@Autowired
 	@Lazy
-	DeviceStore devices;
+	DeviceStoreImpl devices;
 
 	@Autowired
-	ObjectStore objectCache;
+	ObjectStoreImpl objectCache;
 
 	@Autowired
 	VirtualHandler handler;
 
 	@Autowired
-	ApplicationInitializer applicationInitializer;
+	BaseService applicationInitializer;
 
 	@Autowired
 	private VirtualResourceManager virtualResourceManager;
@@ -89,8 +88,8 @@ public class VirtualDriver {
 		// additional required metadata from the profile to the driver stack
 		String result = processCommand(operation.getOperation(), object, value, device, operations);
 
-		objectCache.put(device, operation, result);
-		handler.completeTransaction(transactionId, opId, objectCache.getResponses(device, operation));
+		objectCache.put(device.getName(), operation, result);
+		handler.completeTransaction(transactionId, opId, objectCache.getResponses(device.getName(), operation));
 	}
 
 	// Modify this function as needed to pass necessary metadata from the device
@@ -131,7 +130,6 @@ public class VirtualDriver {
 	}
 
 	public void initialize() {
-		applicationInitializer.init();
 	}
 
 	public void disconnectDevice(Addressable address) {
@@ -144,11 +142,11 @@ public class VirtualDriver {
 	private void receive() {
 		// TODO 7: [Optional] Fill with your own implementation for handling
 		// asynchronous data from the driver layer to the device service
-		Device device = null;
+		String deviceName = null;
 		String result = "";
 		ResourceOperation operation = null;
 
-		objectCache.put(device, operation, result);
+		objectCache.put(deviceName, operation, result);
 	}
 
 }

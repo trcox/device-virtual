@@ -21,6 +21,9 @@
 		<core-metadata-client.version>0.5.0-SNAPSHOT</core-metadata-client.version>
 		<core-exception.version>0.5.0-SNAPSHOT</core-exception.version>
 		<core-test.version>0.5.0-SNAPSHOT</core-test.version>
+		<device-domain.version>0.5.0-SNAPSHOT</device-domain.version>
+		<device-scheduling.version>0.5.0-SNAPSHOT</device-scheduling.version>
+		<device-controller.version>0.5.0-SNAPSHOT</device-controller.version>
 		<support-logging-client.version>0.5.0-SNAPSHOT</support-logging-client.version>
 		<spring.cloud.version>Brixton.SR7</spring.cloud.version>
 		<cglib-nodep.version>3.2.4</cglib-nodep.version>
@@ -117,6 +120,21 @@
 			<groupId>org.edgexfoundry</groupId>
 			<artifactId>core-exception</artifactId>
 			<version>${core-exception.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.edgexfoundry</groupId>
+			<artifactId>device-domain</artifactId>
+			<version>${device-domain.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.edgexfoundry</groupId>
+			<artifactId>device-scheduling</artifactId>
+			<version>${device-scheduling.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.edgexfoundry</groupId>
+			<artifactId>device-controller</artifactId>
+			<version>${device-controller.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.edgexfoundry</groupId>

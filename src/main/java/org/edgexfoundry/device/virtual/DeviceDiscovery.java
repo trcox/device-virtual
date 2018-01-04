@@ -26,10 +26,10 @@ import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-
-import org.edgexfoundry.device.virtual.data.DeviceStore;
-import org.edgexfoundry.device.virtual.data.WatcherStore;
-import org.edgexfoundry.device.virtual.domain.ScanList;
+import org.edgexfoundry.device.domain.ScanList;
+import org.edgexfoundry.device.store.impl.DeviceStoreImpl;
+import org.edgexfoundry.device.store.impl.WatcherStoreImpl;
+import org.edgexfoundry.device.virtual.handler.VirtualHandler;
 import org.edgexfoundry.domain.meta.Addressable;
 import org.edgexfoundry.domain.meta.AdminState;
 import org.edgexfoundry.domain.meta.Device;
@@ -41,20 +41,23 @@ import org.edgexfoundry.support.logging.client.EdgeXLoggerFactory;
 
 @Service
 public class DeviceDiscovery {
-	private final static EdgeXLogger logger = EdgeXLoggerFactory.getEdgeXLogger(DeviceDiscovery.class);
+	private final EdgeXLogger logger = EdgeXLoggerFactory.getEdgeXLogger(this.getClass());
 
 	@Autowired
-	private WatcherStore watchers;
+	private WatcherStoreImpl watchers;
 	
 	@Autowired
 	@Lazy
-	private DeviceStore devices;
+	private DeviceStoreImpl devices;
+	
+	@Autowired
+	private VirtualHandler virtualHandler;
 	
 	//TODO Generate protocol dynamically
 	private Protocol protocol = Protocol.MAC;
 
 	private ProvisionWatcher deviceMatches(Map<String, String> device) {
-		for (ProvisionWatcher watcher: watchers.getWatchers()) {
+		for (ProvisionWatcher watcher: watchers.getWatchers().values()) {
 			Map<String, String> identifiers = watcher.getIdentifiers();
 			boolean found = true;
 			
@@ -117,13 +120,13 @@ public class DeviceDiscovery {
 	}
 	
 	public void provision(ScanList availableList) {
-		if(availableList != null && availableList.getScan().size() > 0){
-			for (Map<String,String> device : availableList.getScan()) {
+		if(availableList != null && availableList.getScanMaps().size() > 0){
+			for (Map<String,String> device : availableList.getScanMaps()) {
 				Device matchingDevice = deviceExists(device);
 				if (matchingDevice != null) {
 					if (matchingDevice.getOperatingState().equals(OperatingState.DISABLED) || devices.getDevice(matchingDevice.getName()) == null) {
 						matchingDevice.setOperatingState(OperatingState.ENABLED);
-						devices.add(matchingDevice);
+						devices.add(matchingDevice, virtualHandler);
 					}
 					continue;
 				}
@@ -132,7 +135,7 @@ public class DeviceDiscovery {
 				if (watcher != null) {
 					//Provision the device
 					Device newDevice = createDevice(device, watcher);
-					devices.add(newDevice);
+					devices.add(newDevice, virtualHandler);
 				}
 			}
 		}

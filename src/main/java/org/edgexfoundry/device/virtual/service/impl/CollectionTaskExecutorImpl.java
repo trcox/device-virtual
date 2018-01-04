@@ -28,20 +28,21 @@ import org.springframework.stereotype.Service;
 
 import org.edgexfoundry.controller.EventClient;
 import org.edgexfoundry.controller.ScheduleClient;
+import org.edgexfoundry.device.virtual.Initializer;
 import org.edgexfoundry.device.virtual.domain.VirtualResource;
-import org.edgexfoundry.device.virtual.service.ApplicationInitializer;
 import org.edgexfoundry.device.virtual.service.CollectionTaskExecutor;
 import org.edgexfoundry.device.virtual.service.VirtualResourceManager;
 import org.edgexfoundry.domain.core.Event;
 import org.edgexfoundry.domain.core.Reading;
 import org.edgexfoundry.domain.meta.Schedule;
 import org.edgexfoundry.exception.controller.ServiceException;
+import org.edgexfoundry.support.logging.client.EdgeXLogger;
+import org.edgexfoundry.support.logging.client.EdgeXLoggerFactory;
 
 @Service
 public class CollectionTaskExecutorImpl implements CollectionTaskExecutor {
 
-	private final org.edgexfoundry.support.logging.client.EdgeXLogger logger = org.edgexfoundry.support.logging.client.EdgeXLoggerFactory
-			.getEdgeXLogger(this.getClass());
+	private final EdgeXLogger logger = EdgeXLoggerFactory.getEdgeXLogger(this.getClass());
 
 	@Autowired
 	private VirtualResourceManager virtualResourceManager;
@@ -53,7 +54,7 @@ public class CollectionTaskExecutorImpl implements CollectionTaskExecutor {
 	private ScheduleClient scheduleClient;
 	
 	@Autowired
-	private ApplicationInitializer appInitializer;
+	private Initializer appInitializer;
 
 	@Override
 	@Async
@@ -85,7 +86,7 @@ public class CollectionTaskExecutorImpl implements CollectionTaskExecutor {
 	private void confirmAppInited() {
 		try {
 			while (true) {
-				if (appInitializer.isInit()) 
+				if (appInitializer.isInitialized()) 
 					return;
 				logger.info("This Micro Service hasn't initialized completedly, wait for 3 seconds");
 				Thread.sleep(3000L);

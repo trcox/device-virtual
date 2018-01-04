@@ -35,14 +35,13 @@ import org.edgexfoundry.device.virtual.config.ApplicationProperties;
 import org.edgexfoundry.device.virtual.service.ProvisionService;
 import org.edgexfoundry.device.virtual.service.YamlReader;
 import org.edgexfoundry.domain.meta.DeviceProfile;
+import org.edgexfoundry.support.logging.client.EdgeXLogger;
+import org.edgexfoundry.support.logging.client.EdgeXLoggerFactory;
 
 @Service
 public class ProvisionServiceImpl implements ProvisionService {
 
-	// private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	// replace above logger with EdgeXLogger below
-	private final org.edgexfoundry.support.logging.client.EdgeXLogger logger = org.edgexfoundry.support.logging.client.EdgeXLoggerFactory
-			.getEdgeXLogger(this.getClass());
+	private final EdgeXLogger logger = EdgeXLoggerFactory.getEdgeXLogger(this.getClass());
 	
 	private Set<DeviceProfile> provisionedProfiles = Collections.synchronizedSet(new HashSet<>());
 
